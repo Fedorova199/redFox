@@ -32,5 +32,8 @@ func main() {
 	}()
 
 	wg.Wait()
+	if err := store.Close(); err != nil {
+		log.Fatalln(err)
+	}
 
 }

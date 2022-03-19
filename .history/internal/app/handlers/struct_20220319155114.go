@@ -1,0 +1,14 @@
+package handlers
+
+type Models struct {
+	ShortURL map[string]string
+}
+
+func NewModels() *Models {
+	model := Models{
+		ShortURL: make(map[string]string),
+	}
+	return &model
+}
+
+func (m *Models) GetURL(id string) (string, errors)

@@ -4,21 +4,18 @@ import (
 	"context"
 	"log"
 	"os/signal"
-	"sync"
 	"syscall"
 
-	"github.com/Fedorova199/shortURL/internal/app/config"
 	"github.com/Fedorova199/shortURL/internal/app/server"
 )
 
 func main() {
-	var wg sync.WaitGroup
 	ctx, stop := signal.NotifyContext(
 		context.Background(), syscall.SIGTERM, syscall.SIGINT,
 	)
 	defer stop()
-	var cfg config.Config
-	router := server.NewRouter()
+
+	router := server.NewRouter(ctx, store, cfg)
 	server, err := server.NewHTTPServer(cfg.ServerAddress, router)
 	if err != nil {
 		log.Fatalln(err)
@@ -32,5 +29,8 @@ func main() {
 	}()
 
 	wg.Wait()
+	if err := store.Close(); err != nil {
+		log.Fatalln(err)
+	}
 
 }
