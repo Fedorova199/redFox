@@ -1,5 +1,8 @@
-module github.com/Fedorova199/shortURL
+module github.com/Fedorova199/shorturl
 
 go 1.16
 
-require github.com/go-chi/chi v1.5.4
+require (
+	github.com/go-chi/chi v1.5.4
+	
+)

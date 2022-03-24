@@ -19,7 +19,7 @@ func main() {
 
 	router.Post("/", model.POSTHandler)
 	router.Post("/api/shorten", model.JSONHandler)
-	router.Get("/{id}", model.GETHandler)
+	router.Get("/{keyID}", model.GETHandler)
 
 	http.ListenAndServe(cfg.ServerAddress, router)
 
