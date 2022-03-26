@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	storage, err := storage.CreateDatabase(db)
+	storage, err := storage.NewModels(cfg.FileStoragePath, 1)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,6 +48,7 @@ func main() {
 
 	go func() {
 		<-c
+		storage.Close()
 		server.Close()
 	}()
 

@@ -48,6 +48,7 @@ func main() {
 
 	go func() {
 		<-c
+		storage.Close()
 		server.Close()
 	}()
 
