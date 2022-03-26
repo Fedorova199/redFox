@@ -10,7 +10,6 @@ import (
 
 	"github.com/Fedorova199/redfox/internal/storage"
 	"github.com/go-chi/chi"
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type Handler struct {
@@ -50,7 +49,10 @@ func (h *Handler) POSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := string(b)
-	id, err := h.Storage.Set(idCookie.Value, url)
+	id, err := h.Storage.Set(r.Context(), storage.CreateURL{
+		URL:  url,
+		User: idCookie.Value,
+	})
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -73,7 +75,7 @@ func (h *Handler) GETHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createURL, err := h.Storage.Get(id)
+	createURL, err := h.Storage.Get(r.Context(), id)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -106,7 +108,10 @@ func (h *Handler) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.Storage.Set(idCookie.Value, request.URL)
+	id, err := h.Storage.Set(r.Context(), storage.CreateURL{
+		URL:  request.URL,
+		User: idCookie.Value,
+	})
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -137,7 +142,7 @@ func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createURLs, err := h.Storage.GetByUser(idCookie.Value)
+	createURLs, err := h.Storage.GetByUser(r.Context(), idCookie.Value)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNoContent)
