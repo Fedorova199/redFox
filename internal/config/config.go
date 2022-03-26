@@ -2,68 +2,35 @@ package config
 
 import (
 	"flag"
-	"os"
-	"strings"
+	"log"
+
+	"github.com/caarlos0/env"
 )
 
 type Config struct {
 	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"test.txt"`
+	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:"user=postgres password=password dbname=urls sslmode=disable"`
 }
 
-const (
-	defaultServerAddress = ":8080"
-	defaultBaseURL       = "http://localhost:8080"
-)
+func ParseVariables() Config {
+	var cfg = Config{
+		ServerAddress:   "localhost:8080",
+		BaseURL:         "http://localhost:8080",
+		FileStoragePath: "test.txt",
+	}
 
-var defaultConfig = Config{
-	ServerAddress: defaultServerAddress,
-	BaseURL:       defaultBaseURL,
-}
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func NewConfig() (Config, error) {
-	conf := defaultConfig
-	conf.parseFlags()
-	conf.parseEnvVars()
-	err := conf.Validate()
-	return conf, err
-}
-
-func (conf *Config) parseFlags() {
-
-	flag.StringVar(&conf.ServerAddress, "a", defaultServerAddress, "network address the server listens on")
-	flag.StringVar(&conf.BaseURL, "b", defaultBaseURL, "resulting base URL")
-	flag.StringVar(&conf.FileStoragePath, "f", "test.txt", "storage file")
-
+	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Server address")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Base URL")
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "file storage path")
+	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "Database")
 	flag.Parse()
 
-}
-
-func (conf *Config) parseEnvVars() {
-	sa := os.Getenv("SERVER_ADDRESS")
-	if sa != "" {
-		conf.ServerAddress = sa
-	}
-
-	bu := os.Getenv("BASE_URL")
-	if bu != "" {
-		conf.BaseURL = bu
-	}
-
-	fsp := os.Getenv("FILE_STORAGE_PATH")
-	if fsp != "" {
-
-		conf.FileStoragePath = fsp
-	}
-
-}
-
-func (conf *Config) Validate() error {
-
-	conf.ServerAddress = strings.TrimSpace(conf.ServerAddress)
-	conf.BaseURL = strings.TrimSpace(conf.BaseURL)
-	conf.FileStoragePath = strings.TrimSpace(conf.FileStoragePath)
-
-	return nil
+	return cfg
 }
