@@ -11,7 +11,7 @@ type Config struct {
 	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"test.txt"`
-	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:"user=postgres password=password dbname=urls sslmode=disable"`
+	DatabaseDSN     string `env:"DATABASE_DSN"`
 }
 
 func ParseVariables() Config {

@@ -15,7 +15,7 @@ import (
 
 func main() {
 	cfg := config.ParseVariables()
-	storage.OpenDB(cfg)
+
 	storage, err := storage.NewModels(cfg.FileStoragePath, 1)
 	if err != nil {
 		log.Fatal(err)
