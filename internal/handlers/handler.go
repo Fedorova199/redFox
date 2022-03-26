@@ -21,7 +21,7 @@ type Middleware interface {
 	Handle(next http.HandlerFunc) http.HandlerFunc
 }
 
-func applyMiddlewares(handler http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
+func Middlewares(handler http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
 	for _, middleware := range middlewares {
 		handler = middleware.Handle(handler)
 	}
@@ -34,16 +34,10 @@ func NewHandler(storage storage.Storage, baseURL string, middlewares []Middlewar
 		Storage: storage,
 		BaseURL: baseURL,
 	}
-	router.Get("/{id}", applyMiddlewares(router.GETHandler, middlewares))
-	router.Get("/user/urls", applyMiddlewares(router.GetUrlsHandler, middlewares))
-	router.Post("/", applyMiddlewares(router.POSTHandler, middlewares))
-	router.Post("/api/shorten", applyMiddlewares(router.JSONHandler, middlewares))
-	//router.Use(middlewares.GzipHandle)
-	//router.Use(middlewares.UngzipHandle)
-
-	// router.Post("/", router.POSTHandler)
-	// router.Post("/api/shorten", router.JSONHandler)
-	// router.Get("/{id}", router.GETHandler)
+	router.Get("/{id}", Middlewares(router.GETHandler, middlewares))
+	router.Get("api/user/urls", Middlewares(router.GetUrlsHandler, middlewares))
+	router.Post("/", Middlewares(router.POSTHandler, middlewares))
+	router.Post("/api/shorten", Middlewares(router.JSONHandler, middlewares))
 
 	return router
 }
@@ -142,6 +136,7 @@ func (h *Handler) JSONHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 	idCookie, err := r.Cookie("user_id")
+	w.Header().Set("Content-Type", "application/json")
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -171,7 +166,6 @@ func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	w.Write(res)
 }
