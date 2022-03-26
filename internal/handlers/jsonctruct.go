@@ -1,6 +1,11 @@
 package handlers
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+
+	"github.com/Fedorova199/redfox/internal/storage"
+)
 
 type BatchRequest struct {
 	CorrelationID string `json:"correlation_id"`
@@ -34,4 +39,13 @@ func Middlewares(handler http.HandlerFunc, middlewares []Middleware) http.Handle
 	}
 
 	return handler
+}
+
+type Storage interface {
+	Get(ctx context.Context, id int) (storage.CreateURL, error)
+	Set(ctx context.Context, model storage.CreateURL) (int, error)
+	GetByUser(ctx context.Context, userID string) ([]storage.CreateURL, error)
+	APIShortenBatch(ctx context.Context, records []storage.ShortenBatch) ([]storage.ShortenBatch, error)
+	GetByOriginURL(ctx context.Context, originURL string) (storage.CreateURL, error)
+	Ping(ctx context.Context) error
 }

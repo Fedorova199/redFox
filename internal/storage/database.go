@@ -40,6 +40,18 @@ func (s *Database) Get(ctx context.Context, id int) (CreateURL, error) {
 	return createURL, nil
 }
 
+func (s *Database) GetByOriginURL(ctx context.Context, originURL string) (CreateURL, error) {
+	var model CreateURL
+
+	row := s.db.QueryRowContext(ctx, "SELECT id, user_id, origin_url FROM url WHERE origin_url = $1", originURL)
+	err := row.Scan(&model.ID, &model.URL, &model.User)
+	if err != nil {
+		return CreateURL{}, err
+	}
+
+	return model, nil
+}
+
 func (s *Database) GetByUser(ctx context.Context, userID string) ([]CreateURL, error) {
 	records := make([]CreateURL, 0)
 
@@ -80,7 +92,7 @@ func (s *Database) Set(ctx context.Context, createURL CreateURL) (int, error) {
 	return id, nil
 }
 
-func (s *Database) ApiShortenBatch(ctx context.Context, models []ShortenBatch) ([]ShortenBatch, error) {
+func (s *Database) APIShortenBatch(ctx context.Context, models []ShortenBatch) ([]ShortenBatch, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
@@ -106,4 +118,8 @@ func (s *Database) ApiShortenBatch(ctx context.Context, models []ShortenBatch) (
 	}
 
 	return models, nil
+}
+
+func (s *Database) Ping(ctx context.Context) error {
+	return s.db.PingContext(ctx)
 }

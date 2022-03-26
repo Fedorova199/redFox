@@ -10,13 +10,6 @@ import (
 	"time"
 )
 
-type Storage interface {
-	Get(tx context.Context, id int) (CreateURL, error)
-	Set(tx context.Context, model CreateURL) (int, error)
-	GetByUser(tx context.Context, userID string) ([]CreateURL, error)
-	ApiShortenBatch(ctx context.Context, records []ShortenBatch) ([]ShortenBatch, error)
-}
-
 type Models struct {
 	Model   map[int]CreateURL
 	Counter int
@@ -102,6 +95,16 @@ func (md *Models) synchronize() {
 	}
 }
 
+func (md *Models) GetByOriginURL(ctx context.Context, originURL string) (CreateURL, error) {
+	for _, model := range md.Model {
+		if model.URL == originURL {
+			return model, nil
+		}
+	}
+
+	return CreateURL{}, fmt.Errorf("originURL %s have not found", originURL)
+}
+
 func (md *Models) Get(tx context.Context, id int) (CreateURL, error) {
 	if model, ok := md.Model[id]; ok {
 		return model, nil
@@ -180,6 +183,10 @@ func (md *Models) WriteCreateURLFile(createURL CreateURL) error {
 	return err
 }
 
-func (md *Models) ApiShortenBatch(ctx context.Context, records []ShortenBatch) ([]ShortenBatch, error) {
+func (md *Models) APIShortenBatch(ctx context.Context, records []ShortenBatch) ([]ShortenBatch, error) {
 	return nil, fmt.Errorf("method has not implemented")
+}
+
+func (md *Models) Ping(ctx context.Context) error {
+	return nil
 }
