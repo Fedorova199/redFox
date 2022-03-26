@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,11 +17,11 @@ func main() {
 	}
 	model := handlers.NewModels()
 	router := chi.NewRouter()
-
+	fmt.Println(cfg)
 	router.Post("/", model.POSTHandler)
 	router.Post("/api/shorten", model.JSONHandler)
 	router.Get("/{id}", model.GETHandler)
 
-	http.ListenAndServe(cfg.ServerAddress, router)
+	http.ListenAndServe(":8080", router)
 
 }
