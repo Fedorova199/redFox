@@ -95,8 +95,8 @@ func (md *Models) synchronize() {
 }
 
 func (md *Models) Get(tx context.Context, id int) (CreateURL, error) {
-	if url, ok := md.Model[id]; ok {
-		return url, nil
+	if model, ok := md.Model[id]; ok {
+		return model, nil
 	}
 
 	return CreateURL{}, fmt.Errorf("id %d have not found", id)

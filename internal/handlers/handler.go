@@ -134,8 +134,8 @@ func (h *Handler) JSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
-	idCookie, err := r.Cookie("user_id")
 	w.Header().Set("Content-Type", "application/json")
+	idCookie, err := r.Cookie("user_id")
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -145,7 +145,12 @@ func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 	createURLs, err := h.Storage.GetByUser(r.Context(), idCookie.Value)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNoContent)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	if len(createURLs) == 0 {
+		http.Error(w, "Not found", 204)
 		return
 	}
 
