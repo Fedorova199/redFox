@@ -24,8 +24,8 @@ var defaultConfig = Config{
 
 func NewConfig() (Config, error) {
 	conf := defaultConfig
-	conf.parseFlags()
 	conf.parseEnvVars()
+	conf.parseFlags()
 	err := conf.Validate()
 	return conf, err
 }
