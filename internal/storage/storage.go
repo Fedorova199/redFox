@@ -122,7 +122,9 @@ func (md *Models) GetByUser(userID string) ([]CreateURL, error) {
 			arrUsers = append(arrUsers, val)
 		}
 	}
-
+	if len(arrUsers) == 0 {
+		return nil, fmt.Errorf("arrUsers with user_id %s have not found", userID)
+	}
 	return arrUsers, nil
 }
 
