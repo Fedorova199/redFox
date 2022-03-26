@@ -24,10 +24,8 @@ func (md *Models) POSTHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (md *Models) GETHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Method, r.URL.Path)
 	id := chi.URLParam(r, "id")
-	fmt.Println(id)
-	if id == " " {
+	if id != fmt.Sprintf("%d", md.counter) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
