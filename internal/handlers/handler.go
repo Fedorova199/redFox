@@ -10,6 +10,7 @@ import (
 
 	"github.com/Fedorova199/redfox/internal/storage"
 	"github.com/go-chi/chi"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type Handler struct {
@@ -19,11 +20,12 @@ type Handler struct {
 	DB      *sql.DB
 }
 
-func NewHandler(storage storage.Storage, baseURL string, middlewares []Middleware) *Handler {
+func NewHandler(storage storage.Storage, baseURL string, middlewares []Middleware, db *sql.DB) *Handler {
 	router := &Handler{
 		Mux:     chi.NewMux(),
 		Storage: storage,
 		BaseURL: baseURL,
+		DB:      db,
 	}
 	router.Get("/{id}", Middlewares(router.GETHandler, middlewares))
 	router.Get("/api/user/urls", Middlewares(router.GetUrlsHandler, middlewares))
