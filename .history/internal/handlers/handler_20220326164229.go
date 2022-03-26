@@ -35,7 +35,7 @@ func NewHandler(storage storage.Storage, baseURL string, middlewares []Middlewar
 		BaseURL: baseURL,
 	}
 	router.Get("/{id}", Middlewares(router.GETHandler, middlewares))
-	router.Get("/user/urls", Middlewares(router.GetUrlsHandler, middlewares))
+	router.Get("api/user/urls", Middlewares(router.GetUrlsHandler, middlewares))
 	router.Post("/", Middlewares(router.POSTHandler, middlewares))
 	router.Post("/api/shorten", Middlewares(router.JSONHandler, middlewares))
 
