@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Fedorova199/redfox/internal/middlewares"
 	"github.com/Fedorova199/redfox/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,9 +38,17 @@ func TestHandler_POSTHandler(t *testing.T) {
 		{
 			name: "simple test #1",
 			storage: &storage.Models{
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
 				Counter: 3,
 				File:    file,
@@ -55,9 +64,17 @@ func TestHandler_POSTHandler(t *testing.T) {
 		{
 			name: "empty body #2",
 			storage: &storage.Models{
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
 				File: file,
 			},
@@ -72,7 +89,11 @@ func TestHandler_POSTHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewHandler(tt.storage, "test.ru")
+			handler := NewHandler(tt.storage, "test.ru", []Middleware{
+				middlewares.GzipHandle{},
+				middlewares.UngzipHandle{},
+				middlewares.NewAuthenticator([]byte("secret key")),
+			})
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 
@@ -107,12 +128,20 @@ func TestHandler_GETHandler(t *testing.T) {
 		{
 			name: "simple test #1",
 			storage: &storage.Models{
-				Counter: 3,
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
-				File: file,
+				Counter: 3,
+				File:    file,
 			},
 			want: want{
 				contentType: "text/plain; charset=utf-8",
@@ -124,12 +153,20 @@ func TestHandler_GETHandler(t *testing.T) {
 		{
 			name: "wrong id #2",
 			storage: &storage.Models{
-				Counter: 3,
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
-				File: file,
+				Counter: 3,
+				File:    file,
 			},
 			want: want{
 				contentType: "text/plain; charset=utf-8",
@@ -141,12 +178,20 @@ func TestHandler_GETHandler(t *testing.T) {
 		{
 			name: "empty id #3",
 			storage: &storage.Models{
-				Counter: 3,
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
-				File: file,
+				Counter: 3,
+				File:    file,
 			},
 			want: want{
 				contentType: "",
@@ -158,7 +203,11 @@ func TestHandler_GETHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewHandler(tt.storage, "test.ru")
+			handler := NewHandler(tt.storage, "test.ru", []Middleware{
+				middlewares.GzipHandle{},
+				middlewares.UngzipHandle{},
+				middlewares.NewAuthenticator([]byte("secret key")),
+			})
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 
@@ -194,12 +243,20 @@ func TestHandler_JSONHandler(t *testing.T) {
 		{
 			name: "simple test #1",
 			storage: &storage.Models{
-				Counter: 3,
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
-				File: file,
+				Counter: 3,
+				File:    file,
 			},
 			want: want{
 				contentType: "application/json",
@@ -212,12 +269,20 @@ func TestHandler_JSONHandler(t *testing.T) {
 		{
 			name: "empty json #2",
 			storage: &storage.Models{
-				Counter: 3,
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
-				File: file,
+				Counter: 3,
+				File:    file,
 			},
 			want: want{
 				contentType: "application/json",
@@ -230,12 +295,20 @@ func TestHandler_JSONHandler(t *testing.T) {
 		{
 			name: "wrong json #3",
 			storage: &storage.Models{
-				Counter: 3,
-				Model: map[int]string{
-					1: "test1.ru",
-					2: "test2.ru",
+				Model: map[int]storage.CreateURL{
+					1: {
+						ID:   1,
+						User: "user",
+						URL:  "test1.ru",
+					},
+					2: {
+						ID:   2,
+						User: "user",
+						URL:  "test2.ru",
+					},
 				},
-				File: file,
+				Counter: 3,
+				File:    file,
 			},
 			want: want{
 				contentType: "text/plain; charset=utf-8",
@@ -248,7 +321,11 @@ func TestHandler_JSONHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewHandler(tt.storage, "test.ru")
+			handler := NewHandler(tt.storage, "test.ru", []Middleware{
+				middlewares.GzipHandle{},
+				middlewares.UngzipHandle{},
+				middlewares.NewAuthenticator([]byte("secret key")),
+			})
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 
@@ -265,12 +342,23 @@ func TestHandler_JSONHandler(t *testing.T) {
 func TestNewHandler(t *testing.T) {
 	storage := &storage.Models{
 		Counter: 3,
-		Model: map[int]string{
-			1: "test1.ru",
-			2: "test2.ru",
+		Model: map[int]storage.CreateURL{
+			1: {
+				ID:   1,
+				User: "user",
+				URL:  "test1.ru",
+			},
+			2: {
+				ID:   2,
+				User: "user",
+				URL:  "test2.ru",
+			},
 		},
 	}
-	handler := NewHandler(storage, "test.ru")
+	handler := NewHandler(storage, "test.ru", []Middleware{
+		middlewares.GzipHandle{},
+		middlewares.UngzipHandle{},
+	})
 	assert.Implements(t, (*http.Handler)(nil), handler)
 }
 
