@@ -10,6 +10,7 @@ type Database struct {
 }
 
 func CreateDatabase(db *sql.DB) (*Database, error) {
+
 	database := &Database{
 		db: db,
 	}

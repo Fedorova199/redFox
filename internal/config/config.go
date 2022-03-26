@@ -3,54 +3,73 @@ package config
 import (
 	"flag"
 	"os"
+	"strings"
 )
 
 type Config struct {
 	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"test.txt"`
-	DatabaseDSN     string `env:"DATABASE_DSN"`
+	DatabaseDSN     string //`env:"DATABASE_DSN" envDefault:"user=postgres password=password dbname=urls sslmode=disable"`
 }
 
-func ParseVariables() Config {
-	var cfg = Config{
-		ServerAddress:   "localhost:8080",
-		BaseURL:         "http://localhost:8080",
-		FileStoragePath: "test.txt",
-	}
+const (
+	defaultServerAddress = ":8080"
+	defaultBaseURL       = "http://localhost:8080"
+)
 
-	// err := env.Parse(&cfg)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+var defaultConfig = Config{
+	ServerAddress: defaultServerAddress,
+	BaseURL:       defaultBaseURL,
+}
 
+func NewConfig() (Config, error) {
+	conf := defaultConfig
+	conf.parseFlags()
+	conf.parseEnvVars()
+	err := conf.Validate()
+	return conf, err
+}
+
+func (conf *Config) parseFlags() {
+
+	flag.StringVar(&conf.ServerAddress, "a", defaultServerAddress, "network address the server listens on")
+	flag.StringVar(&conf.BaseURL, "b", defaultBaseURL, "resulting base URL")
+	flag.StringVar(&conf.FileStoragePath, "f", "test.txt", "storage file")
+	flag.StringVar(&conf.DatabaseDSN, "d", "", `database dsn (default "")`)
+	flag.Parse()
+
+}
+
+func (conf *Config) parseEnvVars() {
 	sa := os.Getenv("SERVER_ADDRESS")
 	if sa != "" {
-		cfg.ServerAddress = sa
+		conf.ServerAddress = sa
 	}
 
 	bu := os.Getenv("BASE_URL")
 	if bu != "" {
-		cfg.BaseURL = bu
+		conf.BaseURL = bu
 	}
 
 	fsp := os.Getenv("FILE_STORAGE_PATH")
 	if fsp != "" {
 
-		cfg.FileStoragePath = fsp
+		conf.FileStoragePath = fsp
 	}
 
 	dd, ok := os.LookupEnv("DATABASE_DSN")
 	if ok {
 
-		cfg.DatabaseDSN = dd
+		conf.DatabaseDSN = dd
 	}
+}
 
-	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Server address")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Base URL")
-	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "file storage path")
-	flag.StringVar(&cfg.DatabaseDSN, "d", "", `database dsn (default "")`)
-	flag.Parse()
+func (conf *Config) Validate() error {
 
-	return cfg
+	conf.ServerAddress = strings.TrimSpace(conf.ServerAddress)
+	conf.BaseURL = strings.TrimSpace(conf.BaseURL)
+	conf.FileStoragePath = strings.TrimSpace(conf.FileStoragePath)
+
+	return nil
 }

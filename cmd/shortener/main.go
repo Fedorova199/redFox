@@ -17,12 +17,16 @@ import (
 )
 
 func main() {
-	cfg := config.ParseVariables()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 	db, err := sql.Open("pgx", cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
 	storage, err := storage.CreateDatabase(db)
 	if err != nil {
 		log.Fatal(err)
