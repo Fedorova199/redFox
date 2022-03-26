@@ -153,7 +153,7 @@ func TestHandler_GETHandler(t *testing.T) {
 				statusCode:  405,
 				redirectURL: "",
 			},
-			path: "",
+			path: "/",
 		},
 	}
 	for _, tt := range tests {

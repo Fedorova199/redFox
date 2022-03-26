@@ -23,7 +23,7 @@ type Models struct {
 }
 
 type CreateURL struct {
-	Id  int
+	ID  int
 	URL string
 }
 
@@ -67,11 +67,11 @@ func loadFile(file *os.File) (int, map[int]string, error) {
 			return 0, nil, err
 		}
 
-		if createURL.Id > lastID {
-			lastID = createURL.Id
+		if createURL.ID > lastID {
+			lastID = createURL.ID
 		}
 
-		urls[createURL.Id] = createURL.URL
+		urls[createURL.ID] = createURL.URL
 	}
 
 	return lastID, urls, nil
@@ -131,9 +131,9 @@ func (md *Models) UpdateFile() error {
 		return err
 	}
 
-	for Id, URL := range md.Model {
+	for ID, URL := range md.Model {
 		err := md.WriteCreateURLFile(CreateURL{
-			Id:  Id,
+			ID:  ID,
 			URL: URL,
 		})
 

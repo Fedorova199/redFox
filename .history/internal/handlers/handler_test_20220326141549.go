@@ -119,7 +119,7 @@ func TestHandler_GETHandler(t *testing.T) {
 				statusCode:  307,
 				redirectURL: "test2.ru",
 			},
-			path: "/2",
+			path: "/3",
 		},
 		{
 			name: "wrong id #2",
@@ -153,7 +153,7 @@ func TestHandler_GETHandler(t *testing.T) {
 				statusCode:  405,
 				redirectURL: "",
 			},
-			path: "",
+			path: "/",
 		},
 	}
 	for _, tt := range tests {
@@ -167,7 +167,7 @@ func TestHandler_GETHandler(t *testing.T) {
 
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
-			//assert.Equal(t, tt.want.redirectURL, resp.Header.Get("Location"))
+			assert.Equal(t, tt.want.redirectURL, resp.Header.Get("Location"))
 		})
 	}
 }
