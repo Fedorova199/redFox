@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,6 +17,7 @@ type Handler struct {
 	BaseURL string
 	DB      *sql.DB
 }
+
 
 func NewHandler(storage storage.Storage, baseURL string, middlewares []Middleware) *Handler {
 	router := &Handler{
@@ -163,10 +163,11 @@ func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PingHandler(w http.ResponseWriter, r *http.Request) {
-	if err := h.DB.Ping(); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
+		if err := h.DB.Ping(); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
 
-	w.WriteHeader(200)
+		w.WriteHeader(200)
+	}
 }
