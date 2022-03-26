@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Fedorova199/redfox/internal/middlewares"
 	"github.com/Fedorova199/redfox/internal/storage"
 	"github.com/go-chi/chi"
 )
@@ -18,17 +17,33 @@ type Handler struct {
 	BaseURL string
 }
 
-func NewHandler(storage storage.Storage, baseURL string) *Handler {
+type Middleware interface {
+	Handle(next http.HandlerFunc) http.HandlerFunc
+}
+
+func applyMiddlewares(handler http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
+	for _, middleware := range middlewares {
+		handler = middleware.Handle(handler)
+	}
+
+	return handler
+}
+func NewHandler(storage storage.Storage, baseURL string, middlewares []Middleware) *Handler {
 	router := &Handler{
 		Mux:     chi.NewMux(),
 		Storage: storage,
 		BaseURL: baseURL,
 	}
-	router.Use(middlewares.GzipHandle)
-	router.Use(middlewares.UngzipHandle)
-	router.Post("/", router.POSTHandler)
-	router.Post("/api/shorten", router.JSONHandler)
-	router.Get("/{id}", router.GETHandler)
+	router.Get("/{id}", applyMiddlewares(router.GETHandler, middlewares))
+	router.Get("/user/urls", applyMiddlewares(router.GetUrlsHandler, middlewares))
+	router.Post("/", applyMiddlewares(router.POSTHandler, middlewares))
+	router.Post("/api/shorten", applyMiddlewares(router.JSONHandler, middlewares))
+	//router.Use(middlewares.GzipHandle)
+	//router.Use(middlewares.UngzipHandle)
+
+	// router.Post("/", router.POSTHandler)
+	// router.Post("/api/shorten", router.JSONHandler)
+	// router.Get("/{id}", router.GETHandler)
 
 	return router
 }
@@ -40,9 +55,14 @@ func (h *Handler) POSTHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
+	idCookie, err := r.Cookie("user_id")
 
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 	url := string(b)
-	id, err := h.Storage.Set(url)
+	id, err := h.Storage.Set(idCookie.Value, url)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -65,7 +85,7 @@ func (h *Handler) GETHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originURL, err := h.Storage.Get(id)
+	createURL, err := h.Storage.Get(id)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -73,7 +93,7 @@ func (h *Handler) GETHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	http.Redirect(w, r, originURL, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, createURL.URL, http.StatusTemporaryRedirect)
 
 }
 
@@ -91,7 +111,14 @@ func (h *Handler) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.Storage.Set(request.URL)
+	idCookie, err := r.Cookie("user_id")
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	id, err := h.Storage.Set(idCookie.Value, request.URL)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -110,5 +137,41 @@ func (h *Handler) JSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
+	w.Write(res)
+}
+
+func (h *Handler) GetUrlsHandler(w http.ResponseWriter, r *http.Request) {
+	idCookie, err := r.Cookie("user_id")
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	createURLs, err := h.Storage.GetByUser(idCookie.Value)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNoContent)
+		return
+	}
+
+	shortenUrls := make([]ShortURLs, 0)
+
+	for _, val := range createURLs {
+		shortenUrls = append(shortenUrls, ShortURLs{
+			ShortURL:    h.BaseURL + "/" + fmt.Sprintf("%d", val.ID),
+			OriginalURL: val.URL,
+		})
+	}
+
+	res, err := json.Marshal(shortenUrls)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 	w.Write(res)
 }
