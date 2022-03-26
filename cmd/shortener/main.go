@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	cfg, _ := config.NewConfig()
+	cfg := config.ParseVariables()
 
 	storage, err := storage.NewModels(cfg.FileStoragePath, 1)
 	if err != nil {
