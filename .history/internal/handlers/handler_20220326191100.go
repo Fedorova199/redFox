@@ -31,7 +31,6 @@ func NewHandler(storage storage.Storage, baseURL string, middlewares []Middlewar
 	router.Get("/ping", Middlewares(router.PingHandler, middlewares))
 	router.Post("/", Middlewares(router.POSTHandler, middlewares))
 	router.Post("/api/shorten", Middlewares(router.JSONHandler, middlewares))
-	router.Post("/api/shorten/batch", Middlewares(router.PostApiShortenBatchHandler, middlewares))
 
 	return router
 }
@@ -196,32 +195,32 @@ func (h *Handler) PostApiShortenBatchHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	idCookie, err := r.Cookie("user_id")
+	userCookie, err := r.Cookie("user_id")
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	var ShortenBatch []storage.ShortenBatch
+	var batchRecords []BatchRecord
 	for _, batchRequest := range batchRequests {
-		ShortenBatch = append(ShortenBatch, storage.ShortenBatch{
-			User:          idCookie.Value,
+		batchRecords = append(batchRecords, storage.BatchRecord{
+			User:          userCookie.Value,
 			URL:           batchRequest.OriginURL,
 			CorrelationID: batchRequest.CorrelationID,
 		})
 	}
 
-	ShortenBatchs, err := h.Storage.ApiShortenBatch(r.Context(), ShortenBatch)
+	batchRecords, err = h.Storage.PutRecords(r.Context(), batchRecords)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
 	var batchResponses []BatchResponse
-	for _, batchResponse := range ShortenBatchs {
+	for _, batchRecord := range batchRecords {
 		batchResponses = append(batchResponses, BatchResponse{
-			CorrelationID: batchResponse.CorrelationID,
-			ShortURL:      h.BaseURL + "/" + fmt.Sprintf("%d", batchResponse.ID),
+			CorrelationID: batchRecord.CorrelationID,
+			ShortURL:      h.BaseURL + "/" + strconv.FormatUint(batchRecord.ID, 10),
 		})
 	}
 

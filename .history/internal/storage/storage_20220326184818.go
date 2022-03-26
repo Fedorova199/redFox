@@ -14,7 +14,6 @@ type Storage interface {
 	Get(tx context.Context, id int) (CreateURL, error)
 	Set(tx context.Context, model CreateURL) (int, error)
 	GetByUser(tx context.Context, userID string) ([]CreateURL, error)
-	ApiShortenBatch(ctx context.Context, records []ShortenBatch) ([]ShortenBatch, error)
 }
 
 type Models struct {
@@ -29,13 +28,6 @@ type CreateURL struct {
 	ID   int
 	URL  string
 	User string
-}
-
-type ShortenBatch struct {
-	ID            uint64
-	User          string
-	URL           string
-	CorrelationID string
 }
 
 func NewModels(filename string, syncTime int) (*Models, error) {
@@ -178,8 +170,4 @@ func (md *Models) WriteCreateURLFile(createURL CreateURL) error {
 	_, err = md.File.Write(data)
 
 	return err
-}
-
-func (md *Models) ApiShortenBatch(ctx context.Context, records []ShortenBatch) ([]ShortenBatch, error) {
-	return nil, fmt.Errorf("method has not implemented")
 }

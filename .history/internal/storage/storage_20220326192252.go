@@ -179,7 +179,3 @@ func (md *Models) WriteCreateURLFile(createURL CreateURL) error {
 
 	return err
 }
-
-func (md *Models) ApiShortenBatch(ctx context.Context, records []ShortenBatch) ([]ShortenBatch, error) {
-	return nil, fmt.Errorf("method has not implemented")
-}

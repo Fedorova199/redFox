@@ -79,31 +79,3 @@ func (s *Database) Set(ctx context.Context, createURL CreateURL) (int, error) {
 
 	return id, nil
 }
-
-func (s *Database) ApiShortenBatch(ctx context.Context, models []ShortenBatch) ([]ShortenBatch, error) {
-	tx, err := s.db.Begin()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	sqlStatement := "INSERT INTO url (user_id, origin_url) VALUES ($1, $2) RETURNING id"
-	stmt, err := tx.PrepareContext(ctx, sqlStatement)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	for id := range models {
-		err = stmt.QueryRowContext(ctx, models[id].User, models[id].URL).Scan(&models[id].ID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		return nil, err
-	}
-
-	return models, nil
-}

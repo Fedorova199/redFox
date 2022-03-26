@@ -80,7 +80,7 @@ func (s *Database) Set(ctx context.Context, createURL CreateURL) (int, error) {
 	return id, nil
 }
 
-func (s *Database) ApiShortenBatch(ctx context.Context, models []ShortenBatch) ([]ShortenBatch, error) {
+func (s *Database) PutShortenBatch(ctx context.Context, models []ShortenBatch) ([]ShortenBatch, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err

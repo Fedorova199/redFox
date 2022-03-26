@@ -196,32 +196,32 @@ func (h *Handler) PostApiShortenBatchHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	idCookie, err := r.Cookie("user_id")
+	userCookie, err := r.Cookie("user_id")
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	var ShortenBatch []storage.ShortenBatch
+	var ArrShortenBatch []storage.ShortenBatch
 	for _, batchRequest := range batchRequests {
-		ShortenBatch = append(ShortenBatch, storage.ShortenBatch{
-			User:          idCookie.Value,
+		ArrShortenBatch = append(ArrShortenBatch, storage.ShortenBatch{
+			User:          userCookie.Value,
 			URL:           batchRequest.OriginURL,
 			CorrelationID: batchRequest.CorrelationID,
 		})
 	}
 
-	ShortenBatchs, err := h.Storage.ApiShortenBatch(r.Context(), ShortenBatch)
+	batchRecords, err = h.Storage.ApiShortenBatch(r.Context(), ArrShortenBatch)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
 	var batchResponses []BatchResponse
-	for _, batchResponse := range ShortenBatchs {
+	for _, batchRecord := range batchRecords {
 		batchResponses = append(batchResponses, BatchResponse{
-			CorrelationID: batchResponse.CorrelationID,
-			ShortURL:      h.BaseURL + "/" + fmt.Sprintf("%d", batchResponse.ID),
+			CorrelationID: batchRecord.CorrelationID,
+			ShortURL:      h.BaseURL + "/" + strconv.FormatUint(batchRecord.ID, 10),
 		})
 	}
 
