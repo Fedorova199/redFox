@@ -1,27 +1,43 @@
 package main
 
 import (
-	"fmt"
+	"github.com/Fedorova199/redfox/internal/config"
+	"github.com/Fedorova199/redfox/internal/handlers"
+	"github.com/Fedorova199/redfox/internal/storage"
+
 	"log"
 	"net/http"
-
-	"github.com/Fedorova199/shorturl/internal/config"
-	"github.com/Fedorova199/shorturl/internal/handlers"
-	"github.com/go-chi/chi"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	cfg, err := config.NewConfig()
+	cfg, _ := config.NewConfig()
+
+	storage, err := storage.NewModels(cfg.FileStoragePath, 5)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
-	model := handlers.NewModels()
-	router := chi.NewRouter()
-	fmt.Println(cfg)
-	router.Post("/", model.POSTHandler)
-	router.Post("/api/shorten", model.JSONHandler)
-	router.Get("/{id}", model.GETHandler)
 
-	http.ListenAndServe(cfg.ServerAddress, router)
+	handler := handlers.NewHandler(storage, cfg.BaseURL)
+	server := &http.Server{
+		Addr:    cfg.ServerAddress,
+		Handler: handler,
+	}
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	go func() {
+		<-c
+		storage.Close()
+		server.Close()
+	}()
+
+	log.Fatal(server.ListenAndServe())
 }

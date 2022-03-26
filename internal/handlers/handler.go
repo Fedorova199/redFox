@@ -3,57 +3,109 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
 	"net/http"
+	"strconv"
 
+	"github.com/Fedorova199/redfox/internal/storage"
 	"github.com/go-chi/chi"
 )
 
-func (md *Models) POSTHandler(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
-	longURL := string(body)
-	if longURL == " " {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	md.counter++
-	md.model[fmt.Sprintf("%d", md.counter)] = longURL
-	w.Header().Set("content-type", "text/plain")
-	w.WriteHeader(http.StatusCreated)
+type Handler struct {
+	*chi.Mux
+	Storage storage.Storage
+	BaseURL string
 }
 
-func (md *Models) GETHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Method, r.URL.Path)
-	id := chi.URLParam(r, "id")
-	fmt.Println(id)
-	if id == " " {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+func NewHandler(storage storage.Storage, baseURL string) *Handler {
+	router := &Handler{
+		Mux:     chi.NewMux(),
+		Storage: storage,
+		BaseURL: baseURL,
 	}
-	fmt.Println(md.model)
-	http.Redirect(w, r, md.model[id], http.StatusTemporaryRedirect)
+	router.Post("/", router.POSTHandler)
+	router.Post("/api/shorten", router.JSONHandler)
+	router.Get("/{id}", router.GETHandler)
+
+	return router
 }
 
-func (md *Models) JSONHandler(w http.ResponseWriter, r *http.Request) {
-	md.counter++
-	body, _ := ioutil.ReadAll(r.Body)
-	someURL := URLRequest{}
-	if err := json.Unmarshal([]byte(body), &someURL); err != nil {
-		log.Fatalln(err)
-		return
-	}
-	w.Header().Set("content-type", "application/json")
-	md.model[fmt.Sprintf("%d", md.counter)] = someURL.SomeURL
-	w.WriteHeader(http.StatusCreated)
-	shortenerURL := URLResponse{
-		ShortenerURL: "http://localhost:8080/" + fmt.Sprintf("%d", md.counter),
-	}
-	js, err := json.MarshalIndent(&shortenerURL, " ", "")
+func (h *Handler) POSTHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+
 	if err != nil {
-		log.Fatalln(err)
+		http.Error(w, err.Error(), 400)
 		return
 	}
-	w.Write(js)
 
+	url := string(b)
+	id, err := h.Storage.Set(url)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	resultURL := h.BaseURL + "/" + fmt.Sprintf("%d", id)
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(201)
+	w.Write([]byte(resultURL))
+}
+
+func (h *Handler) GETHandler(w http.ResponseWriter, r *http.Request) {
+	rawID := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(rawID)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	originURL, err := h.Storage.Get(id)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	http.Redirect(w, r, originURL, http.StatusTemporaryRedirect)
+
+}
+
+func (h *Handler) JSONHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	request := Request{}
+	if err := json.Unmarshal(b, &request); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	id, err := h.Storage.Set(request.URL)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	resultURL := h.BaseURL + "/" + fmt.Sprintf("%d", id)
+	response := Response{Result: resultURL}
+
+	res, err := json.Marshal(response)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	w.Write(res)
 }
