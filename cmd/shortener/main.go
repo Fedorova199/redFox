@@ -1,31 +1,48 @@
 package main
 
 import (
-	"github.com/Fedorova199/redfox/internal/config"
-	"github.com/Fedorova199/redfox/internal/handlers"
-	"github.com/Fedorova199/redfox/internal/storage"
-
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+
+	"github.com/Fedorova199/redfox/internal/config"
+	"github.com/Fedorova199/redfox/internal/handlers"
+	"github.com/Fedorova199/redfox/internal/middlewares"
+	"github.com/Fedorova199/redfox/internal/storage"
 )
 
 func main() {
-	cfg, _ := config.NewConfig()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := sql.Open("pgx", cfg.DatabaseDSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-	storage, err := storage.NewModels(cfg.FileStoragePath, 5)
+	storage, err := storage.CreateDatabase(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	handler := handlers.NewHandler(storage, cfg.BaseURL)
+	ms := []handlers.Middleware{
+		middlewares.GzipHandle{},
+		middlewares.UngzipHandle{},
+		middlewares.NewAuthenticator([]byte("secret key")),
+	}
+
+	handler := handlers.NewHandler(storage, cfg.BaseURL, ms)
 	server := &http.Server{
 		Addr:    cfg.ServerAddress,
 		Handler: handler,
 	}
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c,
 		syscall.SIGHUP,
@@ -35,7 +52,6 @@ func main() {
 
 	go func() {
 		<-c
-		storage.Close()
 		server.Close()
 	}()
 
