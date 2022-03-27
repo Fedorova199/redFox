@@ -1,28 +1,47 @@
 package main
 
 import (
-	"github.com/Fedorova199/redfox/internal/config"
-	"github.com/Fedorova199/redfox/internal/handlers"
-	"github.com/Fedorova199/redfox/internal/storage"
-
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Fedorova199/redfox/internal/app/config"
+	"github.com/Fedorova199/redfox/internal/app/handlers"
+	"github.com/Fedorova199/redfox/internal/app/interfaces"
+	"github.com/Fedorova199/redfox/internal/app/middlewares"
+	"github.com/Fedorova199/redfox/internal/app/storage"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 func main() {
-	cfg, _ := config.NewConfig()
 
-	storage, err := storage.NewModels(cfg.FileStoragePath, 5)
+	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
+	}
+	db, err := sql.Open("pgx", cfg.DatabaseDSN)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer db.Close()
+
+	storage, err := storage.CreateDatabase(db)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	handler := handlers.NewHandler(storage, cfg.BaseURL)
+	mws := []interfaces.Middleware{
+		middlewares.GzipEncoder{},
+		middlewares.GzipDecoder{},
+		middlewares.NewAuth([]byte("secret key")),
+	}
+
+	handler := handlers.NewHandler(storage, cfg.BaseURL, mws)
 	server := &http.Server{
-		Addr:    cfg.ServerAddress,
+		Addr:    "8080",
 		Handler: handler,
 	}
 
@@ -35,7 +54,6 @@ func main() {
 
 	go func() {
 		<-c
-		storage.Close()
 		server.Close()
 	}()
 
