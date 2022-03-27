@@ -41,7 +41,7 @@ func main() {
 
 	handler := handlers.NewHandler(storage, cfg.BaseURL, mws)
 	server := &http.Server{
-		Addr:    cfg.ServerAddress,
+		Addr:    ":8080",
 		Handler: handler,
 	}
 
