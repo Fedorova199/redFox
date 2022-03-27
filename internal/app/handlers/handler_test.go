@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Fedorova199/redfox/internal/interfaces"
-	"github.com/Fedorova199/redfox/internal/middlewares"
-	"github.com/Fedorova199/redfox/internal/storage"
+	"github.com/Fedorova199/redfox/internal/app/interfaces"
+	"github.com/Fedorova199/redfox/internal/app/middlewares"
+	"github.com/Fedorova199/redfox/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

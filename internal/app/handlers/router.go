@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/Fedorova199/redfox/internal/interfaces"
+	"github.com/Fedorova199/redfox/internal/app/interfaces"
 	"github.com/go-chi/chi/v5"
 )
 

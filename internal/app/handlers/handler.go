@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Fedorova199/redfox/internal/storage"
+	"github.com/Fedorova199/redfox/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"

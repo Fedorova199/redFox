@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Fedorova199/redfox/internal/config"
-	"github.com/Fedorova199/redfox/internal/handlers"
-	"github.com/Fedorova199/redfox/internal/interfaces"
-	"github.com/Fedorova199/redfox/internal/middlewares"
-	"github.com/Fedorova199/redfox/internal/storage"
+	"github.com/Fedorova199/redfox/internal/app/config"
+	"github.com/Fedorova199/redfox/internal/app/handlers"
+	"github.com/Fedorova199/redfox/internal/app/interfaces"
+	"github.com/Fedorova199/redfox/internal/app/middlewares"
+	"github.com/Fedorova199/redfox/internal/app/storage"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Fedorova199/redfox/internal/storage"
+	"github.com/Fedorova199/redfox/internal/app/storage"
 )
 
 type Storage interface {
