@@ -72,7 +72,7 @@ func parseVariables() Config {
 	var cfg = Config{
 		ServerAddress:   ":8080",
 		BaseURL:         "http://localhost:8080",
-		FileStoragePath: "test.txt",
+		FileStoragePath: "db.txt",
 	}
 
 	err := env.Parse(&cfg)
